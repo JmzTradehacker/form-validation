@@ -130,3 +130,79 @@ function validateTerms(terms) {
     clearError();
     return true;
 }
+
+//////////Store User Data//////////
+function storeUser(username, email, password) {
+    const user = {
+        username: username.toLowerCase(),
+        email: email.toLowerCase(),
+        password: password
+    };
+
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+
+    // Check if username exists
+    if (users.some(user => user.username === username.toLowerCase())) {
+        displayError('That username is already taken.');
+        return false;
+    }
+
+    users.push(user);
+    localStorage.setItem('users', JSON.stringify(users));
+    return true;
+}
+
+/////////////Event Listeners///////////
+
+registrationForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const username = registrationForm.username.value.trim();
+    const email = registrationForm.email.value.trim();
+    const password = registrationForm.password.value.trim();
+    const passwordCheck = registrationForm.passwordCheck.value.trim();
+    const terms = registrationForm.terms;
+
+    if (
+        validateUsername(username) &&
+        validateEmail(email) &&
+        validatePassword(password, passwordCheck, username) &&
+        validateTerms(terms)
+    ) {
+        if (storeUser(username, email, password)) {
+            alert('Registration successful!');
+            registrationForm.reset();
+            clearError();
+        }
+    }
+});
+
+
+loginForm.addEventListener('submit', function (evt) {
+    evt.preventDefault();
+
+    const username = loginForm.username.value.trim().toLowerCase();
+    const password = loginForm.password.value.trim();
+    const persist = loginForm.persist.checked;
+
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const user = users.find(user => user.username === username);
+
+    if (!user) {
+        displayError('Username does not exist.');
+        focusOnField(loginForm.username);
+        return;
+    }
+
+    if (user.password !== password) {
+        displayError('Incorrect password.');
+        focusOnField(loginForm.password);
+        return;
+    }
+
+    clearError();
+    let successMessage = 'Login successful!';
+    if (persist) successMessage += ' You will stay logged in.';
+    alert(successMessage);
+    loginForm.reset();
+});
